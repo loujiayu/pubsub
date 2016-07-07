@@ -11,4 +11,4 @@ try {
 }
 
 require('babel-register')(config);
-require('./test')
+require('./src')

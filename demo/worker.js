@@ -17,6 +17,7 @@ socket.on('start job', (data) => {
   if (worker === name) {
     if (message === 'email') {
       sendEmail().then((resolve) => {
+        // 通知客户端完成情况
         socket.emit('finish job', {info: 'email has sent.'})
       })
     }

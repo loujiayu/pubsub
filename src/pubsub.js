@@ -6,10 +6,11 @@ export default function pubsub(socket) {
   var listeners = []
   var psChannles = Object.create(null)
 
+  // 发送message到worker
   function publish(channel, worker, message) {
     const subs = psChannles[channel]
     return new Promise((resolve, reject) => {
-      if (!subs[worker].has(message)) {
+      if (!subs || !subs[worker].has(message)) {
         reject({status: 404, error: 'message does not exist.'})
       } else {
         socketDispatch(message, socket, worker)
@@ -20,6 +21,7 @@ export default function pubsub(socket) {
     })
   }
 
+  // worker订阅信息
   function subscribe(channel, worker, message) {
     return new Promise((resolve, reject) => {
       var subs = psChannles[channel]
@@ -27,7 +29,7 @@ export default function pubsub(socket) {
 
       if (subs[worker]) {
         if (subs[worker].has(message)) {
-          reject({error: `message:${message} exists`, worker: worker})
+          reject({error: `message:${message} existed`, worker: worker})
         } else {
           subs[worker].add(message)
           resolve({info: 'add message succeed', worker: worker})
@@ -42,19 +44,25 @@ export default function pubsub(socket) {
     })
   }
 
+  // worker 取消订阅
   function unsubscribe(channel, worker) {
     return new Promise((resolve, reject) => {
       var subs = psChannles[channel]
-      var index = subs.indexOf(worker)
-      if (index > -1) {
-        subs.splice(index, 1)
-        resolve({info: 'unsubscribe succeed', worker: worker})
+      if (!subs) {
+        reject({error: 'channel does not exist'})
       } else {
-        reject({error: `can not find channel: ${channel}`, worker: worker})
+        var index = subs.indexOf(worker)
+        if (index > -1) {
+          subs.splice(index, 1)
+          resolve({info: 'unsubscribe succeed', worker: worker})
+        } else {
+          reject({error: `can not find channel: ${channel}`, worker: worker})
+        }
       }
     })
   }
 
+  // 获取pubsub信息 测试用
   function getState() {
     return psChannles
   }
